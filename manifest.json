@@ -1,0 +1,19 @@
+{
+    "name": "Fastream",
+    "short_name": "Fastream",
+    "description": "Your entertainment, one click away.",
+    "start_url": "./",
+    "scope": "./",
+    "display": "standalone",
+    "orientation": "any",
+    "background_color": "#101010",
+    "theme_color": "#FFD600",
+    "icons": [
+        {
+            "src": "./assets/icon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any"
+        }
+    ]
+}
