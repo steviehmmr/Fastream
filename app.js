@@ -1,353 +1,289 @@
-const DEFAULT_BASE = "www.nomesitostreaming";
+/* =========================================
+   FASTREAM - APP.JS
+   Versione 1.1
+   ========================================= */
 
-const STORAGE_KEY = "fastream_config";
+const DEFAULT_BASE_DOMAIN = "www.nomesitostreaming";
+const STORAGE_KEY = "fastreamConfig";
+
+/* ELEMENTI DELLA PAGINA */
 
 const elements = {
     loading: document.getElementById("loadingScreen"),
     setup: document.getElementById("setupScreen"),
     success: document.getElementById("successScreen"),
 
-    form: document.getElementById("domainForm"),
-
     extension: document.getElementById("extensionInput"),
-    prefix: document.getElementById("domainPrefix"),
+    connect: document.getElementById("connectBtn"),
 
-    advanced: document.getElementById("advancedPanel"),
-    advancedButton: document.getElementById("advancedButton"),
+    settings: document.getElementById("settingsBtn"),
+    advanced: document.getElementById("advancedSettings"),
 
-    fullDomain: document.getElementById("fullDomainInput"),
+    fullUrl: document.getElementById("fullUrlInput"),
     baseDomain: document.getElementById("baseDomainInput"),
 
-    saveAdvanced: document.getElementById("saveAdvancedButton"),
+    saveSettings: document.getElementById("saveSettingsBtn"),
+    closeSettings: document.getElementById("closeSettingsBtn"),
 
-    settings: document.getElementById("settingsButton"),
-
-    error: document.getElementById("errorMessage"),
-    connect: document.querySelector(".connect-button")
+    error: document.getElementById("errorMessage")
 };
 
-function getConfig() {
 
+/* CONFIGURAZIONE */
+
+function loadConfig() {
     try {
-        return JSON.parse(localStorage.getItem(STORAGE_KEY));
-    } catch {
-        return null;
+        const saved = localStorage.getItem(STORAGE_KEY);
+
+        if (saved) {
+            return JSON.parse(saved);
+        }
+    } catch (error) {
+        console.error("Errore lettura configurazione:", error);
     }
 
+    return {
+        baseDomain: DEFAULT_BASE_DOMAIN,
+        extension: "",
+        lastUrl: ""
+    };
 }
 
-function saveConfig(config) {
+let config = loadConfig();
 
+
+function saveConfig() {
     localStorage.setItem(
         STORAGE_KEY,
         JSON.stringify(config)
     );
-
 }
 
-function showScreen(screen) {
 
-    elements.loading.classList.add("hidden");
-    elements.setup.classList.add("hidden");
-    elements.success.classList.add("hidden");
+/* GESTIONE SCHERMATE */
 
-    screen.classList.remove("hidden");
+function showSetup() {
+    if (elements.loading) {
+        elements.loading.style.display = "none";
+    }
 
+    if (elements.success) {
+        elements.success.style.display = "none";
+    }
+
+    if (elements.setup) {
+        elements.setup.style.display = "block";
+    }
+
+    if (elements.extension) {
+        elements.extension.value = config.extension || "";
+    }
 }
+
 
 function showError(message) {
+    if (!elements.error) {
+        alert(message);
+        return;
+    }
 
     elements.error.textContent = message;
-
+    elements.error.style.display = "block";
 }
+
+
+function hideError() {
+    if (elements.error) {
+        elements.error.style.display = "none";
+    }
+}
+
+
+/* COSTRUZIONE INDIRIZZO */
 
 function normalizeUrl(value) {
-
-    let url;
-
-    try {
-
-        url = new URL(
-            value.includes("://")
-                ? value
-                : "https://" + value
-        );
-
-    } catch {
-
-        return null;
-
-    }
-
-    if (!["http:", "https:"].includes(url.protocol)) {
-        return null;
-    }
-
-    if (!url.hostname || !url.hostname.includes(".")) {
-        return null;
-    }
-
-    if (url.username || url.password) {
-        return null;
-    }
-
-    return url.href;
-
-}
-
-function buildUrl(base, extension) {
-
-    return normalizeUrl(
-        `https://${base}.${extension}`
-    );
-
-}
-
-/*
-  Verifica best-effort della raggiungibilità.
-
-  no-cors permette la richiesta senza leggere
-  la risposta del sito esterno.
-
-  Non distingue HTTP 404 da HTTP 200.
-  Verifica soltanto se la richiesta riesce
-  a completarsi a livello di rete.
-*/
-
-async function checkDomain(url) {
-
-    const controller = new AbortController();
-
-    const timeout = setTimeout(() => {
-        controller.abort();
-    }, 6000);
-
-    try {
-
-        await fetch(url, {
-            method: "GET",
-            mode: "no-cors",
-            cache: "no-store",
-            signal: controller.signal
-        });
-
-        return true;
-
-    } catch {
-
-        return false;
-
-    } finally {
-
-        clearTimeout(timeout);
-
-    }
-
-}
-
-function showSetup(config = null) {
-
-    showScreen(elements.setup);
-
-    elements.error.textContent = "";
-
-    const base = config?.base || DEFAULT_BASE;
-
-    elements.prefix.textContent = base + ".";
-
-    elements.baseDomain.value = base;
-
-    elements.extension.value = config?.extension || "";
-
-    elements.fullDomain.value = config?.fullUrl || "";
-
-}
-
-function openSite(url) {
-
-    window.location.assign(url);
-
-}
-
-async function connectDomain(url, config) {
-
-    elements.connect.disabled = true;
-
-    showScreen(elements.loading);
-
-    document.getElementById("loadingText").textContent =
-        "Verifica del dominio...";
-
-    const reachable = await checkDomain(url);
-
-    if (!reachable) {
-
-        showSetup(config);
-
-        showError(
-            "Impossibile verificare il dominio. Controlla l'indirizzo e riprova."
-        );
-
-        elements.connect.disabled = false;
-
-        return;
-
-    }
-
-    saveConfig(config);
-
-    openSite(url);
-
-}
-
-async function initialize() {
-
-    const config = getConfig();
-
-    if (!config || !config.url) {
-
-        showSetup();
-
-        return;
-
-    }
-
-    showScreen(elements.loading);
-
-    document.getElementById("loadingText").textContent =
-        "Bentornato su Fastream...";
-
-    const reachable = await checkDomain(config.url);
-
-    if (reachable) {
-
-        openSite(config.url);
-
-    } else {
-
-        showSetup(config);
-
-        showError(
-            "Il dominio salvato non sembra raggiungibile. Inserisci quello aggiornato."
-        );
-
-    }
-
-}
-
-/* Inserimento nuova estensione */
-
-elements.form.addEventListener("submit", async (event) => {
-
-    event.preventDefault();
-
-    const extension = elements.extension.value
-        .trim()
-        .replace(/^\./, "")
-        .toLowerCase();
-
-    if (!/^[a-z0-9-]+$/.test(extension)) {
-
-        showError("Inserisci un'estensione valida.");
-
-        return;
-
-    }
-
-    const base = elements.baseDomain.value.trim();
-
-    if (!/^[a-z0-9.-]+$/i.test(base)) {
-
-        showError("Il dominio base non è valido.");
-
-        return;
-
-    }
-
-    const url = buildUrl(base, extension);
+    let url = value.trim();
 
     if (!url) {
-
-        showError("Impossibile costruire il dominio.");
-
-        return;
-
+        return "";
     }
 
-    const config = {
-        mode: "extension",
-        base,
-        extension,
-        url
-    };
+    if (!/^https?:\/\//i.test(url)) {
+        url = "https://" + url;
+    }
 
-    await connectDomain(url, config);
+    try {
+        const parsed = new URL(url);
 
-});
+        if (!parsed.hostname.includes(".")) {
+            return "";
+        }
 
-/* Apertura impostazioni avanzate */
+        return parsed.href;
+    } catch (error) {
+        return "";
+    }
+}
 
-elements.advancedButton.addEventListener("click", () => {
 
-    elements.advanced.classList.toggle("hidden");
+function buildUrl() {
+    const extension = elements.extension
+        ? elements.extension.value.trim()
+        : "";
 
-});
+    if (!extension) {
+        return "";
+    }
 
-/* Apertura rapida delle impostazioni */
+    const cleanExtension = extension
+        .replace(/^https?:\/\//i, "")
+        .replace(/^www\./i, "")
+        .replace(/^\/+/, "");
 
-elements.settings.addEventListener("click", () => {
+    const base = config.baseDomain || DEFAULT_BASE_DOMAIN;
 
-    const config = getConfig();
+    return normalizeUrl(base + "." + cleanExtension);
+}
 
-    showSetup(config);
 
-    elements.advanced.classList.remove("hidden");
+/* APERTURA DIRETTA DEL SITO */
 
-});
+function openWebsite(url) {
+    const validUrl = normalizeUrl(url);
 
-/* Salvataggio dominio completo */
+    if (!validUrl) {
+        showError("Inserisci un indirizzo valido.");
+        return;
+    }
 
-elements.saveAdvanced.addEventListener("click", async () => {
+    hideError();
 
-    const url = normalizeUrl(
-        elements.fullDomain.value.trim()
-    );
+    config.lastUrl = validUrl;
+    saveConfig();
+
+    window.location.assign(validUrl);
+}
+
+
+/* PULSANTE CONNETTI */
+
+function connectDomain() {
+    const url = buildUrl();
 
     if (!url) {
-
-        showError("Inserisci un indirizzo completo valido.");
-
+        showError("Inserisci un'estensione del dominio valida.");
         return;
-
     }
 
-    const config = {
-        mode: "full",
-        url,
-        fullUrl: url,
-        base: elements.baseDomain.value.trim() || DEFAULT_BASE,
-        extension: ""
-    };
+    config.extension = elements.extension.value.trim();
 
-    await connectDomain(url, config);
+    saveConfig();
 
-});
+    openWebsite(url);
+}
 
-/* Avvio */
 
-initialize();
+/* IMPOSTAZIONI AVANZATE */
 
-/* Registrazione Service Worker */
+function openAdvancedSettings() {
+    if (elements.advanced) {
+        elements.advanced.style.display = "block";
+    }
 
-if ("serviceWorker" in navigator) {
+    if (elements.baseDomain) {
+        elements.baseDomain.value = config.baseDomain || DEFAULT_BASE_DOMAIN;
+    }
 
-    window.addEventListener("load", () => {
+    if (elements.fullUrl) {
+        elements.fullUrl.value = config.lastUrl || "";
+    }
+}
 
-        navigator.serviceWorker.register("./service-worker.js")
-            .catch(error => {
-                console.error("Service Worker:", error);
-            });
 
+function closeAdvancedSettings() {
+    if (elements.advanced) {
+        elements.advanced.style.display = "none";
+    }
+}
+
+
+function saveAdvancedSettings() {
+    const newBase = elements.baseDomain
+        ? elements.baseDomain.value.trim()
+        : "";
+
+    const newUrl = elements.fullUrl
+        ? elements.fullUrl.value.trim()
+        : "";
+
+    if (newBase) {
+        config.baseDomain = newBase
+            .replace(/^https?:\/\//i, "")
+            .replace(/\/+$/, "");
+    }
+
+    if (newUrl) {
+        const validUrl = normalizeUrl(newUrl);
+
+        if (!validUrl) {
+            showError("L'indirizzo completo non è valido.");
+            return;
+        }
+
+        config.lastUrl = validUrl;
+    }
+
+    saveConfig();
+
+    closeAdvancedSettings();
+
+    showSetup();
+}
+
+
+/* EVENTI */
+
+if (elements.connect) {
+    elements.connect.addEventListener("click", connectDomain);
+}
+
+if (elements.extension) {
+    elements.extension.addEventListener("keydown", function(event) {
+        if (event.key === "Enter") {
+            connectDomain();
+        }
     });
-
 }
+
+if (elements.settings) {
+    elements.settings.addEventListener("click", openAdvancedSettings);
+}
+
+if (elements.closeSettings) {
+    elements.closeSettings.addEventListener("click", closeAdvancedSettings);
+}
+
+if (elements.saveSettings) {
+    elements.saveSettings.addEventListener("click", saveAdvancedSettings);
+}
+
+
+/* AVVIO FASTREAM */
+
+function initializeFastream() {
+    hideError();
+
+    // Se esiste un indirizzo salvato,
+    // aprilo direttamente senza verifiche preventive.
+
+    if (config.lastUrl) {
+        window.location.assign(config.lastUrl);
+        return;
+    }
+
+    // Altrimenti mostra la schermata iniziale.
+
+    showSetup();
+}
+
+initializeFastream();
