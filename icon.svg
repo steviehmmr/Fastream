@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect
+x="12"
+y="12"
+width="488"
+height="488"
+rx="95"
+fill="#101010"
+stroke="#FFD600"
+stroke-width="20"
+/>
+
+<path
+d="M345 105
+H165
+L115 220
+H290
+L260 270
+L210 270
+L180 350
+H235
+L205 415
+L350 250
+H290
+L345 105Z"
+fill="#FFFFFF"
+/>
+
+</svg>
