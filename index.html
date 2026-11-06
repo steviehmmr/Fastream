@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+    <meta name="theme-color" content="#101010">
+
+    <meta name="description"
+          content="Fastream - Your streaming launcher">
+
+    <title>Fastream</title>
+
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" href="./assets/icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="./style.css">
+</head>
+
+<body>
+
+    <main class="app">
+
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">F</span>
+                <span>FASTREAM</span>
+            </div>
+
+            <button id="settingsButton"
+                    class="settings-button"
+                    aria-label="Impostazioni">
+                ⚙
+            </button>
+        </header>
+
+        <section class="main-content">
+
+            <div class="brand">
+                <div class="brand-icon">F</div>
+                <h1>Fastream</h1>
+                <p class="subtitle">Your entertainment, one click away.</p>
+            </div>
+
+            <div id="loadingScreen" class="loading-screen hidden">
+                <div class="loader"></div>
+                <p id="loadingText">Controllo del sito...</p>
+            </div>
+
+            <div id="setupScreen" class="setup-screen hidden">
+
+                <h2 id="setupTitle">Bentornato!</h2>
+
+                <p id="setupDescription">
+                    Configuriamo il tuo indirizzo.
+                </p>
+
+                <form id="domainForm">
+
+                    <label for="extensionInput">
+                        Inserisci l'estensione del dominio
+                    </label>
+
+                    <div class="domain-input">
+
+                        <span id="domainPrefix">
+                            www.nomesitostreaming.
+                        </span>
+
+                        <input
+                            type="text"
+                            id="extensionInput"
+                            placeholder="com"
+                            autocomplete="off"
+                            required
+                        >
+
+                    </div>
+
+                    <button type="submit" class="connect-button">
+                        CONNETTI
+                    </button>
+
+                </form>
+
+                <div id="advancedPanel" class="advanced-panel hidden">
+
+                    <div class="separator"></div>
+
+                    <h3>Configurazione avanzata</h3>
+
+                    <label for="fullDomainInput">
+                        Indirizzo completo
+                    </label>
+
+                    <input
+                        type="url"
+                        id="fullDomainInput"
+                        placeholder="https://www.esempio.com"
+                    >
+
+                    <label for="baseDomainInput">
+                        Dominio base per la modalità estensione
+                    </label>
+
+                    <input
+                        type="text"
+                        id="baseDomainInput"
+                        placeholder="www.nomesitostreaming"
+                    >
+
+                    <button id="saveAdvancedButton"
+                            class="secondary-button"
+                            type="button">
+                        SALVA DOMINIO COMPLETO
+                    </button>
+
+                </div>
+
+                <button id="advancedButton"
+                        class="advanced-toggle"
+                        type="button">
+                    ⚙ Impostazioni avanzate
+                </button>
+
+                <p id="errorMessage" class="error-message"></p>
+
+            </div>
+
+            <div id="successScreen" class="success-screen hidden">
+                <div class="success-icon">✓</div>
+                <h2>Dominio salvato!</h2>
+                <p>Preparazione del sito...</p>
+            </div>
+
+        </section>
+
+        <footer>
+            FASTREAM <span>•</span> VERSION 1.0
+        </footer>
+
+    </main>
+
+    <script src="./app.js"></script>
+
+</body>
+</html>
